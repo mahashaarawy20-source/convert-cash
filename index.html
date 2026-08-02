@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert Cash</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <!-- استيراد الخطوط الاحترافية من جوجل -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================================
+           1. نظام المتغيرات وأنماط الألوان (CSS Custom Properties)
+           ========================================================================== */
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --text-muted: #64748b;
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --border-color: #cbd5e1;
+            --input-bg: #f1f5f9;
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            --danger-color: #dc2626;
+            --success-color: #16a34a;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --transition-speed: 0.3s;
+        }
+
+        /* --------------------------------------------------------------------------
+           الوضع الليلي (Dark Theme Styles)
+           -------------------------------------------------------------------------- */
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            --danger-color: #ef4444;
+            --success-color: #22c55e;
+        }
+
+        /* ==========================================================================
+           2. إعادة الضبط العامة والتنسيقات الأساسية
+           ========================================================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+            transition: background-color var(--transition-speed) ease, 
+                        color var(--transition-speed) ease, 
+                        border-color var(--transition-speed) ease, 
+                        box-shadow var(--transition-speed) ease;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        /* ==========================================================================
+           3. الحاويات الهيكلية وعناصر الواجهة (Layout Components)
+           ========================================================================== */
+        .app-container {
+            width: 100%;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 0 4px;
+        }
+
+        .app-header h1 {
+            font-size: 1.85rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+        }
+
+        .app-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .theme-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.25rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.05);
+            border-color: var(--primary-color);
+        }
+
+        /* ==========================================================================
+           4. البطاقة الرئيسية للتطبيق ومكونات النماذج
+           ========================================================================== */
+        .converter-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 36px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border-radius: var(--radius-md);
+            font-size: 1.15rem;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        /* ==========================================================================
+           5. قسم تفاعل العملات والقوائم المنسدلة المخصصة
+           ========================================================================== */
+        .currencies-section {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        @media (max-width: 550px) {
+            .currencies-section {
+                grid-template-columns: 1fr;
+            }
+            .swap-btn {
+                margin: 0 auto;
+                transform: rotate(90deg);
+            }
+        }
+
+        .currency-box label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .custom-select-wrapper {
+            position: relative;
+            user-select: none;
+        }
+
+        .select-trigger {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            padding: 13px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .select-trigger:hover {
+            border-color: var(--primary-color);
+        }
+
+        .select-trigger .arrow {
+            margin-right: auto;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            left: 0;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow);
+            z-index: 100;
+            display: none;
+            max-height: 300px;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .dropdown-menu.open {
+            display: flex;
+        }
+
+        .search-input {
+            padding: 12px 14px;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            outline: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .options-list {
+            overflow-y: auto;
+            max-height: 230px;
+        }
+
+        .option-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .option-item:hover {
+            background-color: var(--input-bg);
+            color: var(--primary-color);
+        }
+
+        .swap-btn {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem;
+            color: var(--text-color);
+            margin-top: 22px;
+        }
+
+        .swap-btn:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+            transform: rotate(180deg);
+        }
+
+        /* ==========================================================================
+           6. حاويات النتائج، أشرطة التحميل، والرسائل
+           ========================================================================== */
+        .results-section {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        #original-text {
+            font-size: 1rem;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        #converted-result {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 18px;
+            letter-spacing: -1px;
+        }
+
+        .info-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 18px;
+        }
+
+        .info-card .info-label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .info-card .info-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        /* ==========================================================================
+           7. لوحة أزرار التفاعل والإجراءات السريعة
+           ========================================================================== */
+        .actions-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .action-btn {
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .action-btn.secondary {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .action-btn.secondary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .action-btn.danger {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+
+        .action-btn.danger:hover {
+            background-color: rgba(220, 38, 38, 0.1);
+            color: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- ترويسة التطبيق -->
+        <header class="app-header">
+            <div>
+                <h1>Convert Cash</h1>
+                <p class="app-subtitle">نظام تحويل العملات</p>
+            </div>
+            <button id="theme-toggle" class="theme-btn" aria-label="تبديل الوضع الليلي">🌙</button>
+        </header>
+
+        <!-- جسم التطبيق الرئيسي -->
+        <main class="converter-card">
+            <!-- حقل الإدخال الأساسي -->
+            <div class="input-group">
+                <label for="amount">المبلغ المراد تحويله</label>
+                <input type="text" id="amount" value="1" placeholder="أدخل القيمة العددية هنا...">
+            </div>
+
+            <!-- قسم القوائم المنسدلة لاختيار العملات -->
+            <div class="currencies-section">
+                <!-- العملة المصدر -->
+                <div class="currency-box">
+                    <label>من العملة</label>
+                    <div class="custom-select-wrapper" id="from-select-wrapper">
+                        <div class="select-trigger" id="from-trigger">
+                            <span id="from-selected-flag">🇪🇬</span>
+                            <span id="from-selected-text">EGP - الجنيه المصري</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="dropdown-menu" id="from-dropdown">
+                            <input type="text" class="search-input" id="from-search" placeholder="ابحث برمز أو اسم العملة...">
+                            <div class="options-list" id="from-options"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- زر التبديل السريع -->
+                <button id="swap-btn" class="swap-btn" aria-label="تبديل العملات">🔄</button>
+
+                <!-- العملة المستهدفة -->
+                <div class="currency-box">
+                    <label>إلى العملة</label>
+                    <div class="custom-select-wrapper" id="to-select-wrapper">
+                        <div class="select-trigger" id="to-trigger">
+                            <span id="to-selected-flag">🇺🇸</span>
+                            <span id="to-selected-text">USD - الدولار الأمريكي</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="dropdown-menu" id="to-dropdown">
+                            <input type="text" class="search-input" id="to-search" placeholder="ابحث برمز أو اسم العملة...">
+                            <div class="options-list" id="to-options"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- حاوية عرض النتائج بالتفصيل -->
+            <div class="results-section">
+                <div class="result-display">
+                    <span id="original-text">1 الجنيه المصري =</span>
+                    <h2 id="converted-result">--</h2>
+                </div>
+
+                <div class="info-cards">
+                    <div class="info-card">
+                        <span class="info-label">سعر الصرف المحلي</span>
+                        <span id="exchange-rate-text" class="info-value">--</span>
+                    </div>
+                    <div class="info-card">
+                        <span class="info-label">حالة قاعدة البيانات</span>
+                        <span class="info-value" style="color: var(--success-color);">نشطة ومحدثة</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- أزرار الإجراءات والتحكم -->
+            <div class="actions-section">
+                <button id="copy-btn" class="action-btn secondary">نسخ النتيجة</button>
+                <button id="clear-btn" class="action-btn danger">إعادة ضبط</button>
+            </div>
+        </main>
+    </div>
+<!-- الشعار في أسفل الصفحة على اليمين -->
+<div style="position: fixed; bottom: 30px; right: 30px; width: 70px; height: 70px; border-radius: 50%; overflow: hidden; box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); background-color: #fff; z-index: 1000; border: 4px solid #fff;">
+    <img src="logo.png" alt="Convert Cash Logo" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+</div>
+    <!-- ==========================================================================
+       8. طبقة المنطق البرمجي وقاعدة البيانات المحلية المتكاملة
+       ========================================================================== -->
+    <script>
+        /* ==========================================================================
+           قاعدة بيانات أسعار الصرف المحلية الثابتة (مقاسة مقارنة بالدولار الأمريكي USD)
+           ========================================================================== */
+        const localExchangeRatesData = {
+            "USD": 1.0,
+            "EUR": 0.92,
+            "GBP": 0.78,
+            "EGP": 48.50,
+            "SAR": 3.75,
+            "AED": 3.67,
+            "KWD": 0.31,
+            "QAR": 3.64,
+            "BHD": 0.38,
+            "OMR": 0.38,
+            "JOD": 0.71,
+            "CAD": 1.36,
+            "AUD": 1.52,
+            "JPY": 155.0,
+            "CHF": 0.90,
+            "CNY": 7.25,
+            "INR": 83.4,
+            "TRY": 32.5,
+            "MAD": 10.1,
+            "DZD": 134.5,
+            "TND": 3.12,
+            "IQD": 1310.0,
+            "LBP": 89500.0,
+            "SYP": 13000.0,
+            "YER": 250.0,
+            "SDG": 600.0,
+            "LYD": 4.85,
+            "AFN": 72.0,
+            "ALL": 95.0,
+            "AMD": 388.0,
+            "ANG": 1.79,
+            "AOA": 835.0,
+            "ARS": 890.0,
+            "AWG": 1.80,
+            "AZN": 1.70,
+            "BAM": 1.80,
+            "BBD": 2.00,
+            "BDT": 117.0,
+            "BGN": 1.80,
+            "BIF": 2850.0,
+            "BMD": 1.00,
+            "BND": 1.35,
+            "BOB": 6.91,
+            "BRL": 5.25,
+            "BSD": 1.00,
+            "BTN": 83.4,
+            "BWP": 13.6,
+            "BYN": 3.25,
+            "BZD": 2.00,
+            "CDF": 2800.0,
+            "CLP": 940.0,
+            "COP": 3900.0,
+            "CRC": 515.0,
+            "CUP": 24.0,
+            "CVE": 101.5,
+            "CZK": 23.2,
+            "DJF": 177.7,
+            "DKK": 6.88,
+            "DOP": 59.0,
+            "ERN": 15.0,
+            "ETB": 57.5,
+            "FJD": 2.26,
+            "FKP": 0.78,
+            "FOK": 6.88,
+            "GEL": 2.68,
+            "GHS": 14.5,
+            "GIP": 0.78,
+            "GMD": 68.5,
+            "GNF": 8600.0,
+            "GTQ": 7.85,
+            "GYD": 209.0,
+            "HKD": 7.82,
+            "HNL": 24.7,
+            "HRK": 6.95,
+            "HTG": 132.0,
+            "HUF": 365.0,
+            "IDR": 16200.0,
+            "ILS": 3.70,
+            "ISK": 138.0,
+            "JMD": 156.0,
+            "KES": 132.0,
+            "KGS": 89.5,
+            "KHR": 4050.0,
+            "KID": 1.52,
+            "KMF": 452.0,
+            "KRW": 1370.0,
+            "KYD": 0.83,
+            "KZT": 450.0,
+            "LAK": 21500.0,
+            "LKR": 302.0,
+            "LRD": 192.0,
+            "LSL": 18.5,
+            "MDL": 17.8,
+            "MGA": 4500.0,
+            "MKD": 56.8,
+            "MMK": 2100.0,
+            "MNT": 3450.0,
+            "MOP": 8.05,
+            "MRU": 39.8,
+            "MUR": 46.5,
+            "MVR": 15.4,
+            "MWK": 1750.0,
+            "MXN": 17.2,
+            "MYR": 4.72,
+            "MZN": 63.8,
+            "NAD": 18.5,
+            "NGN": 1450.0,
+            "NIO": 36.7,
+            "NOK": 10.9,
+            "NPR": 133.5,
+            "NZD": 1.65,
+            "PAB": 1.00,
+            "PEN": 3.72,
+            "PGK": 3.85,
+            "PHP": 58.0,
+            "PKR": 278.0,
+            "PLN": 4.02,
+            "PYG": 7500.0,
+            "RON": 4.60,
+            "RSD": 108.0,
+            "RUB": 91.0,
+            "RWF": 1300.0,
+            "SBD": 8.45,
+            "SCR": 13.5,
+            "SEK": 10.7,
+            "SGD": 1.35,
+            "SHP": 0.78,
+            "SLE": 22.5,
+            "SOS": 571.0,
+            "SRD": 35.0,
+            "SSP": 1300.0,
+            "STN": 22.5,
+            "SZL": 18.5,
+            "THB": 36.8,
+            "TJS": 10.9,
+            "TMT": 3.50,
+            "TOP": 2.38,
+            "TTD": 6.80,
+            "TVD": 1.52,
+            "TWD": 32.4,
+            "TZS": 2600.0,
+            "UAH": 40.5,
+            "UGX": 3800.0,
+            "UYU": 39.0,
+            "UZS": 12700.0,
+            "VES": 36.5,
+            "VND": 25400.0,
+            "VUV": 120.0,
+            "WST": 2.75,
+            "XAF": 605.0,
+            "XCD": 2.70,
+            "XDR": 0.75,
+            "XOF": 605.0,
+            "XPF": 110.0,
+            "ZAR": 18.5,
+            "ZMW": 26.5,
+            "ZWL": 13.5
+        };
+
+        /* قائمة العملات وتفاصيلها الكاملة */
+        const currenciesData = [
+            { code: "AED", countryAr: "الإمارات", nameAr: "درهم إماراتي", flag: "🇦🇪" },
+            { code: "AFN", countryAr: "أفغانستان", nameAr: "أفغاني أفغاني", flag: "🇦🇫" },
+            { code: "ALL", countryAr: "ألبانيا", nameAr: "ليك ألباني", flag: "🇦🇱" },
+            { code: "AMD", countryAr: "أرمينيا", nameAr: "درام أرميني", flag: "🇦🇲" },
+            { code: "ANG", countryAr: "جزر الأنتيل", nameAr: "غيلدر الأنتيل", flag: "🇨🇼" },
+            { code: "AOA", countryAr: "أنغولا", nameAr: "كوانزا أنغولي", flag: "🇦🇴" },
+            { code: "ARS", countryAr: "الأرجنتين", nameAr: "بيزو أرجنتيني", flag: "🇦🇷" },
+            { code: "AUD", countryAr: "أستراليا", nameAr: "دولار أسترالي", flag: "🇦🇺" },
+            { code: "AWG", countryAr: "أروبا", nameAr: "فلورين أروبي", flag: "🇦🇼" },
+            { code: "AZN", countryAr: "أذربيجان", nameAr: "مانات أذربيجاني", flag: "🇦🇿" },
+            { code: "BAM", countryAr: "البوسنة والهرسك", nameAr: "مارك بوسني", flag: "🇧🇦" },
+            { code: "BBD", countryAr: "باربادوس", nameAr: "دولار بربادوسي", flag: "🇧🇧" },
+            { code: "BDT", countryAr: "بنغلاديش", nameAr: "تاكا بنغلاديشي", flag: "🇧🇩" },
+            { code: "BGN", countryAr: "بلغاريا", nameAr: "ليف بلغاري", flag: "🇧🇬" },
+            { code: "BHD", countryAr: "البحرين", nameAr: "دينار بحريني", flag: "🇧🇭" },
+            { code: "BIF", countryAr: "بوروندي", nameAr: "فرنك بوروندي", flag: "🇧🇮" },
+            { code: "BMD", countryAr: "برمودا", nameAr: "دولار برمودي", flag: "🇧🇲" },
+            { code: "BND", countryAr: "بروناي", nameAr: "دولار بروناي", flag: "🇧🇳" },
+            { code: "BOB", countryAr: "بوليفيا", nameAr: "بوليفيانو بوليفي", flag: "🇧🇴" },
+            { code: "BRL", countryAr: "البرازيل", nameAr: "ريال برازيلي", flag: "🇧🇷" },
+            { code: "BSD", countryAr: "البهاما", nameAr: "دولار بهامي", flag: "🇧🇸" },
+            { code: "BTN", countryAr: "بوتان", nameAr: "نغولترم بوتاني", flag: "🇧🇹" },
+            { code: "BWP", countryAr: "بوتسوانا", nameAr: "بولا بوتسواني", flag: "🇧🇼" },
+            { code: "BYN", countryAr: "بيلاروسيا", nameAr: "روبل بيلاروسي", flag: "🇧🇾" },
+            { code: "BZD", countryAr: "بليز", nameAr: "دولار بليزي", flag: "🇧🇿" },
+            { code: "CAD", countryAr: "كندا", nameAr: "دولار كندي", flag: "🇨🇦" },
+            { code: "CDF", countryAr: "الكونغو", nameAr: "فرنك كونغولي", flag: "🇨🇩" },
+            { code: "CHF", countryAr: "سويسرا", nameAr: "فرنك سويسري", flag: "🇨🇭" },
+            { code: "CLP", countryAr: "تشيلي", nameAr: "بيزو تشيلي", flag: "🇨🇱" },
+            { code: "CNY", countryAr: "الصين", nameAr: "يوان صيني", flag: "🇨🇳" },
+            { code: "COP", countryAr: "كولومبيا", nameAr: "بيزو كولومبي", flag: "🇨🇴" },
+            { code: "CRC", countryAr: "كوستاريكا", nameAr: "كولون كوستاريكي", flag: "🇨🇷" },
+            { code: "CUP", countryAr: "كوبا", nameAr: "بيزو كوبي", flag: "🇨🇺" },
+            { code: "CVE", countryAr: "الرأس الأخضر", nameAr: "إسكودو الرأس الأخضر", flag: "🇨🇻" },
+            { code: "CZK", countryAr: "التشيك", nameAr: "كرونة تشيكية", flag: "🇨🇿" },
+            { code: "DJF", countryAr: "جيبوتي", nameAr: "فرنك جيبوتي", flag: "🇩🇯" },
+            { code: "DKK", countryAr: "الدنمارك", nameAr: "كرونة دنماركية", flag: "🇩🇰" },
+            { code: "DOP", countryAr: "الدومينيكان", nameAr: "بيزو دومينيكاني", flag: "🇩🇴" },
+            { code: "DZD", countryAr: "الجزائر", nameAr: "دينار جزائري", flag: "🇩🇿" },
+            { code: "EGP", countryAr: "مصر", nameAr: "جنيه مصري", flag: "🇪🇬" },
+            { code: "ERN", countryAr: "إريتريا", nameAr: "ناكفا إريترية", flag: "🇪🇷" },
+            { code: "ETB", countryAr: "إثيوبيا", nameAr: "بير إثيوبي", flag: "🇪🇹" },
+            { code: "EUR", countryAr: "الاتحاد الأوروبي", nameAr: "يورو", flag: "🇪🇺" },
+            { code: "FJD", countryAr: "فيجي", nameAr: "دولار فيجي", flag: "🇫🇯" },
+            { code: "FKP", countryAr: "جزر فوكلاند", nameAr: "جنيه فوكلاند", flag: "🇫🇰" },
+            { code: "GBP", countryAr: "المملكة المتحدة", nameAr: "جنيه استرليني", flag: "🇬🇧" },
+            { code: "GEL", countryAr: "جورجيا", nameAr: "لارى جورجي", flag: "🇬🇪" },
+            { code: "GHS", countryAr: "غانا", nameAr: "سيدي غاني", flag: "🇬🇭" },
+            { code: "GIP", countryAr: "جبل طارق", nameAr: "جنيه جبل طارق", flag: "🇬🇮" },
+            { code: "GMD", countryAr: "غامبيا", nameAr: "دالاسي غامبي", flag: "🇬🇲" },
+            { code: "GNF", countryAr: "غينيا", nameAr: "فرنك غيني", flag: "🇬🇳" },
+            { code: "GTQ", countryAr: "غواتيمالا", nameAr: "كوتزال غواتيمالا", flag: "🇬🇹" },
+            { code: "GYD", countryAr: "غيانا", nameAr: "دولار غياني", flag: "🇬🇾" },
+            { code: "HKD", countryAr: "هونغ كونغ", nameAr: "دولار هونغ كونغ", flag: "🇭🇰" },
+            { code: "HNL", countryAr: "هندوراس", nameAr: "ليمبيرا هندوراس", flag: "🇭🇳" },
+            { code: "HTG", countryAr: "هايتي", nameAr: "غورد هايتي", flag: "🇭🇹" },
+            { code: "HUF", countryAr: "المجر", nameAr: "فورنت مجري", flag: "🇭🇺" },
+            { code: "IDR", countryAr: "إندونيسيا", nameAr: "روبية إندونيسية", flag: "🇮🇩" },
+            { code: "ILS", countryAr: "إسرائيل", nameAr: "شيكل إسرائيلي", flag: "🇮🇱" },
+            { code: "INR", countryAr: "الهند", nameAr: "روبية هندية", flag: "🇮🇳" },
+            { code: "IQD", countryAr: "العراق", nameAr: "دينار عراقي", flag: "🇮🇶" },
+            { code: "IRR", countryAr: "إيران", nameAr: "ريال إيراني", flag: "🇮🇷" },
+            { code: "ISK", countryAr: "آيسلندا", nameAr: "كرونة آيسلندية", flag: "🇮🇸" },
+            { code: "JMD", countryAr: "جامايكا", nameAr: "دولار جامايكي", flag: "🇯🇲" },
+            { code: "JOD", countryAr: "الأردن", nameAr: "دينار أردني", flag: "🇯🇴" },
+            { code: "JPY", countryAr: "اليابان", nameAr: "ين ياباني", flag: "🇯🇵" },
+            { code: "KES", countryAr: "كينيا", nameAr: "شلن كيني", flag: "🇰🇪" },
+            { code: "KGS", countryAr: "قيرغيزستان", nameAr: "سوم قيرغيزستاني", flag: "🇰🇬" },
+            { code: "KHR", countryAr: "كمبوديا", nameAr: "رييل كمبودي", flag: "🇰🇭" },
+            { code: "KMF", countryAr: "جزر القمر", nameAr: "فرنك جزر القمر", flag: "🇰🇲" },
+            { code: "KRW", countryAr: "كوريا الجنوبية", nameAr: "وون كوري جنوبي", flag: "🇰🇷" },
+            { code: "KWD", countryAr: "الكويت", nameAr: "دينار كويتي", flag: "🇰🇼" },
+            { code: "KYD", countryAr: "جزر كايمان", nameAr: "دولار كايمان", flag: "🇰🇾" },
+            { code: "KZT", countryAr: "كازاخستان", nameAr: "تينغ كازاخستاني", flag: "🇰🇿" },
+            { code: "LAK", countryAr: "لاوس", nameAr: "كيب لاوسي", flag: "🇱🇦" },
+            { code: "LBP", countryAr: "لبنان", nameAr: "جنيه لبناني", flag: "🇱🇧" },
+            { code: "LKR", countryAr: "سريلانكا", nameAr: "روبية سريلانكية", flag: "🇱🇰" },
+            { code: "LRD", countryAr: "ليبيريا", nameAr: "دولار ليبيري", flag: "🇱🇷" },
+            { code: "LSL", countryAr: "ليسوتو", nameAr: "لوتي ليسوتو", flag: "🇱🇸" },
+            { code: "LYD", countryAr: "ليبيا", nameAr: "دينار ليبي", flag: "🇱🇾" },
+            { code: "MAD", countryAr: "المغرب", nameAr: "درهم مغربي", flag: "🇲🇦" },
+            { code: "MDL", countryAr: "مولدوفا", nameAr: "ليو مولدوفي", flag: "🇲🇩" },
+            { code: "MGA", countryAr: "مدغشقر", nameAr: "أرياري مدغشقري", flag: "🇲🇬" },
+            { code: "MKD", countryAr: "مقدونيا", nameAr: "دينار مقدوني", flag: "🇲🇰" },
+            { code: "MMK", countryAr: "ميانمار", nameAr: "كيات ميانماري", flag: "🇲🇲" },
+            { code: "MNT", countryAr: "منغوليا", nameAr: "توغروغ منغولي", flag: "🇲🇳" },
+            { code: "MOP", countryAr: "ماكاو", nameAr: "باتاكا ماكاوية", flag: "🇲🇴" },
+            { code: "MRU", countryAr: "موريتانيا", nameAr: "أوقية موريتانية", flag: "🇲🇷" },
+            { code: "MUR", countryAr: "موريشيوس", nameAr: "روبية موريشيوسية", flag: "🇲🇺" },
+            { code: "MVR", countryAr: "المالديف", nameAr: "روفيه مالديفية", flag: "🇲🇻" },
+            { code: "MWK", countryAr: "ملاوي", nameAr: "كواشا ملاوية", flag: "🇲🇼" },
+            { code: "MXN", countryAr: "المكسيك", nameAr: "بيزو مكسيكي", flag: "🇲🇽" },
+            { code: "MYR", countryAr: "ماليزيا", nameAr: "رينغيت ماليزي", flag: "🇲🇾" },
+            { code: "MZN", countryAr: "موزمبيق", nameAr: "متكال موزمبيقي", flag: "🇲🇿" },
+            { code: "NAD", countryAr: "ناميبيا", nameAr: "دولار ناميبي", flag: "🇳🇦" },
+            { code: "NGN", countryAr: "نيجيريا", nameAr: "نايرا نيجيرية", flag: "🇳🇬" },
+            { code: "NIO", countryAr: "نيكاراغوا", nameAr: "قرطبة نيكاراغوا", flag: "🇳🇮" },
+            { code: "NOK", countryAr: "النرويج", nameAr: "كرونة نرويجية", flag: "🇳🇴" },
+            { code: "NPR", countryAr: "نيبال", nameAr: "روبية نيبالية", flag: "🇳🇵" },
+            { code: "NZD", countryAr: "نيوزيلندا", nameAr: "دولار نيوزيلندي", flag: "🇳🇿" },
+            { code: "OMR", countryAr: "عمان", nameAr: "ريال عماني", flag: "🇴🇲" },
+            { code: "PAB", countryAr: "بنما", nameAr: "بالبوا بنمي", flag: "🇵🇦" },
+            { code: "PEN", countryAr: "بيرو", nameAr: "سول بيروفي", flag: "🇵🇪" },
+            { code: "PGK", countryAr: "بابوا غينيا", nameAr: "كينا بابوا", flag: "🇵🇬" },
+            { code: "PHP", countryAr: "الفلبين", nameAr: "بيزو فلبيني", flag: "🇵🇭" },
+            { code: "PKR", countryAr: "باكستان", nameAr: "روبية باكستانية", flag: "🇵🇰" },
+            { code: "PLN", countryAr: "بولندا", nameAr: "زلوتي بولندي", flag: "🇵🇱" },
+            { code: "PYG", countryAr: "باراغواي", nameAr: "غواراني باراغواي", flag: "🇵🇾" },
+            { code: "QAR", countryAr: "قطر", nameAr: "ريال قطري", flag: "🇶🇦" },
+            { code: "RON", countryAr: "رومانيا", nameAr: "ليو روماني", flag: "🇷🇴" },
+            { code: "RSD", countryAr: "صربيا", nameAr: "دينار صربي", flag: "🇷🇸" },
+            { code: "RUB", countryAr: "روسيا", nameAr: "روبل روسي", flag: "🇷🇺" },
+            { code: "RWF", countryAr: "رواندا", nameAr: "فرنك رواندي", flag: "🇷🇼" },
+            { code: "SAR", countryAr: "السعودية", nameAr: "ريال سعودي", flag: "🇸🇦" },
+            { code: "SCR", countryAr: "سيشيل", nameAr: "روبية سيشيلية", flag: "🇸🇨" },
+            { code: "SDG", countryAr: "السودان", nameAr: "جنيه سوداني", flag: "🇸🇩" },
+            { code: "SEK", countryAr: "السويد", nameAr: "كرونة سويدية", flag: "🇸🇪" },
+            { code: "SGD", countryAr: "سنغافورة", nameAr: "دولار سنغافوري", flag: "🇸🇬" },
+            { code: "SOS", countryAr: "الصومال", nameAr: "شلن صومالي", flag: "🇸🇴" },
+            { code: "SRD", countryAr: "سورينام", nameAr: "دولار سورينامي", flag: "🇸🇷" },
+            { code: "SSP", countryAr: "جنوب السودان", nameAr: "جنيه جنوب سوداني", flag: "🇸🇸" },
+            { code: "SYP", countryAr: "سوريا", nameAr: "جنيه سوري", flag: "🇸🇾" },
+            { code: "THB", countryAr: "تايلاند", nameAr: "بات تايلاندي", flag: "🇹🇭" },
+            { code: "TJS", countryAr: "طاجيكستان", nameAr: "ساموني طاجيكي", flag: "🇹🇯" },
+            { code: "TND", countryAr: "تونس", nameAr: "دينار تونسي", flag: "🇹🇳" },
+            { code: "TRY", countryAr: "تركيا", nameAr: "ليرة تركية", flag: "🇹🇷" },
+            { code: "TTD", countryAr: "ترينيداد وتوباغو", nameAr: "دولار ترينيداد", flag: "🇹🇹" },
+            { code: "TWD", countryAr: "تايوان", nameAr: "دولار تايواني", flag: "🇹🇼" },
+            { code: "TZS", countryAr: "تنزانيا", nameAr: "شلن تنزاني", flag: "🇹🇿" },
+            { code: "UAH", countryAr: "أوكرانيا", nameAr: "هريفنا أوكرانية", flag: "🇺🇦" },
+            { code: "UGX", countryAr: "أوغندا", nameAr: "شلن أوغندي", flag: "🇺🇬" },
+            { code: "USD", countryAr: "الولايات المتحدة", nameAr: "دولار أمريكي", flag: "🇺🇸" },
+            { code: "UYU", countryAr: "أوروغواي", nameAr: "بيزو أوروغواي", flag: "🇺🇾" },
+            { code: "UZS", countryAr: "أوزبكستان", nameAr: "سوم أوزبكستاني", flag: "🇺🇿" },
+            { code: "VES", countryAr: "فنزويلا", nameAr: "بوليفار فنزويلي", flag: "🇻🇪" },
+            { code: "VND", countryAr: "فيتنام", nameAr: "دونغ فيتنامي", flag: "🇻🇳" },
+            { code: "YER", countryAr: "اليمن", nameAr: "ريال يمني", flag: "🇾🇪" },
+            { code: "ZAR", countryAr: "جنوب أفريقيا", nameAr: "راند جنوب أفريقي", flag: "🇿🇦" },
+            { code: "ZMW", countryAr: "زامبيا", nameAr: "كواشا زامبية", flag: "🇿🇲" }
+        ];
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const amountInput = document.getElementById("amount");
+            const fromTrigger = document.getElementById("from-trigger");
+            const toTrigger = document.getElementById("to-trigger");
+            const fromDropdown = document.getElementById("from-dropdown");
+            const toDropdown = document.getElementById("to-dropdown");
+            const fromOptions = document.getElementById("from-options");
+            const toOptions = document.getElementById("to-options");
+            const fromSearch = document.getElementById("from-search");
+            const toSearch = document.getElementById("to-search");
+            const swapBtn = document.getElementById("swap-btn");
+            const copyBtn = document.getElementById("copy-btn");
+            const clearBtn = document.getElementById("clear-btn");
+            const themeToggle = document.getElementById("theme-toggle");
+            
+            const convertedResult = document.getElementById("converted-result");
+            const originalText = document.getElementById("original-text");
+            const exchangeRateText = document.getElementById("exchange-rate-text");
+
+            const fromSelectedFlag = document.getElementById("from-selected-flag");
+            const fromSelectedText = document.getElementById("from-selected-text");
+            const toSelectedFlag = document.getElementById("to-selected-flag");
+            const toSelectedText = document.getElementById("to-selected-text");
+
+            let appState = {
+                amount: 1,
+                fromCurrency: "EGP",
+                toCurrency: "USD",
+                theme: "light"
+            };
+
+            function restoreSessionStorage() {
+                const savedData = localStorage.getItem("offlineCurrencyState");
+                if (savedData) {
+                    try {
+                        const parsed = JSON.parse(savedData);
+                        if (parsed.fromCurrency) appState.fromCurrency = parsed.fromCurrency;
+                        if (parsed.toCurrency) appState.toCurrency = parsed.toCurrency;
+                        if (parsed.amount !== undefined) appState.amount = parsed.amount;
+                        if (parsed.theme) appState.theme = parsed.theme;
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+                amountInput.value = appState.amount;
+                document.documentElement.setAttribute("data-theme", appState.theme);
+                themeToggle.textContent = appState.theme === "dark" ? "☀️" : "🌙";
+            }
+
+            function persistSessionStorage() {
+                localStorage.setItem("offlineCurrencyState", JSON.stringify(appState));
+            }
+
+            function renderCurrencyOptions(searchFilter = "") {
+                const query = searchFilter.toLowerCase().trim();
+                const matched = currenciesData.filter(c => 
+                    c.code.toLowerCase().includes(query) ||
+                    c.nameAr.toLowerCase().includes(query) ||
+                    c.countryAr.toLowerCase().includes(query)
+                );
+
+                const html = matched.map(c => `
+                    <div class="option-item" data-code="${c.code}">
+                        <span>${c.flag}</span>
+                        <span><strong>${c.code}</strong> (${c.countryAr}) — ${c.nameAr}</span>
+                    </div>
+                `).join("");
+
+                fromOptions.innerHTML = html;
+                toOptions.innerHTML = html;
+            }
+
+            function refreshSelectedUI() {
+                const fromObj = currenciesData.find(c => c.code === appState.fromCurrency);
+                const toObj = currenciesData.find(c => c.code === appState.toCurrency);
+
+                if (fromObj) {
+                    fromSelectedFlag.textContent = fromObj.flag;
+                    fromSelectedText.textContent = `${fromObj.code} - ${fromObj.nameAr}`;
+                }
+                if (toObj) {
+                    toSelectedFlag.textContent = toObj.flag;
+                    toSelectedText.textContent = `${toObj.code} - ${toObj.nameAr}`;
+                }
+            }
+
+            function executeConversionMath() {
+                const rateFromUSD = localExchangeRatesData[appState.fromCurrency] || 1.0;
+                const rateToUSD = localExchangeRatesData[appState.toCurrency] || 1.0;
+                
+                const directRate = rateToUSD / rateFromUSD;
+                const finalResult = appState.amount * directRate;
+                const fromObj = currenciesData.find(c => c.code === appState.fromCurrency);
+
+                originalText.textContent = `${Number(appState.amount).toLocaleString()} ${fromObj ? fromObj.nameAr : appState.fromCurrency} =`;
+                
+                // تثبيت الكسور بدقة رقمين عشريين בדיוק (2 Decimal Places)
+                convertedResult.textContent = finalResult.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                exchangeRateText.textContent = `1 ${appState.fromCurrency} = ${Number(directRate.toFixed(2))} ${appState.toCurrency}`;
+            }
+
+            fromTrigger.addEventListener("click", () => {
+                fromDropdown.classList.toggle("open");
+                toDropdown.classList.remove("open");
+                fromSearch.focus();
+            });
+
+            toTrigger.addEventListener("click", () => {
+                toDropdown.classList.toggle("open");
+                fromDropdown.classList.remove("open");
+                toSearch.focus();
+            });
+
+            window.addEventListener("click", (e) => {
+                if (!e.target.closest(".currency-box")) {
+                    fromDropdown.classList.remove("open");
+                    toDropdown.classList.remove("open");
+                }
+            });
+
+            fromSearch.addEventListener("input", (e) => renderCurrencyOptions(e.target.value));
+            toSearch.addEventListener("input", (e) => renderCurrencyOptions(e.target.value));
+
+            fromOptions.addEventListener("click", (e) => {
+                const item = e.target.closest(".option-item");
+                if (item) {
+                    appState.fromCurrency = item.getAttribute("data-code");
+                    fromDropdown.classList.remove("open");
+                    refreshSelectedUI();
+                    persistSessionStorage();
+                    executeConversionMath();
+                }
+            });
+
+            toOptions.addEventListener("click", (e) => {
+                const item = e.target.closest(".option-item");
+                if (item) {
+                    appState.toCurrency = item.getAttribute("data-code");
+                    toDropdown.classList.remove("open");
+                    refreshSelectedUI();
+                    persistSessionStorage();
+                    executeConversionMath();
+                }
+            });
+
+            amountInput.addEventListener("input", (e) => {
+                let val = e.target.value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
+                const parts = val.split('.');
+                if (parts.length > 2) val = parts[0] + '.' + parts.slice(1).join('');
+                
+                amountInput.value = val;
+                appState.amount = val === "" || val === "." ? 0 : Number(val);
+                persistSessionStorage();
+                executeConversionMath();
+            });
+
+            swapBtn.addEventListener("click", () => {
+                const temp = appState.fromCurrency;
+                appState.fromCurrency = appState.toCurrency;
+                appState.toCurrency = temp;
+                refreshSelectedUI();
+                persistSessionStorage();
+                executeConversionMath();
+            });
+
+            copyBtn.addEventListener("click", () => {
+                const text = `${originalText.textContent} ${convertedResult.textContent}`;
+                navigator.clipboard.writeText(text).then(() => {
+                    const old = copyBtn.textContent;
+                    copyBtn.textContent = "تم النسخ بنجاح!";
+                    setTimeout(() => copyBtn.textContent = old, 1500);
+                });
+            });
+
+            clearBtn.addEventListener("click", () => {
+                appState.amount = 1;
+                amountInput.value = 1;
+                persistSessionStorage();
+                executeConversionMath();
+            });
+
+            themeToggle.addEventListener("click", () => {
+                appState.theme = appState.theme === "light" ? "dark" : "light";
+                document.documentElement.setAttribute("data-theme", appState.theme);
+                themeToggle.textContent = appState.theme === "dark" ? "☀️" : "🌙";
+                persistSessionStorage();
+            });
+
+            restoreSessionStorage();
+            renderCurrencyOptions();
+            refreshSelectedUI();
+            executeConversionMath();
+        });
+    </script>
+</body>
+</html>
